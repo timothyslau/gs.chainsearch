@@ -6,9 +6,15 @@
 # LOAD WEBPAGE ------------------------------------------------------------
 
 # generate list of webpages
-# blank - 2019
+# blank - 2019 (920 results)
+url_list <- function(second_pg_url, from=0, to=900, by=20){
+  return(lapply(X = seq(from = from, to = to, by = by), FUN = function(i){gsub(pattern = "start=\\d\\d", replacement = paste0("start=", i), x = second_pg_url)}))
+}
 
-"https://scholar.google.com/scholar?start=0&hl=en&as_sdt=5,45&sciodt=0,45&as_yhi=2019&cites=10244671870114417611&scipsc="
+url_list(
+  second_pg_url = "https://scholar.google.com/scholar?start=20&hl=en&as_sdt=5,45&sciodt=0,45&as_yhi=2019&cites=10244671870114417611&scipsc="
+  )
+
 
 
 
@@ -57,4 +63,4 @@ https://github.com/nealhaddaway/GSscraper
 #   - uses a different URL structure for "Cited by" results
 # -- https://scholar.google.com/scholar?cites=10244671870114417611&as_sdt=5,45&sciodt=0,45&hl=en
 # - limits page results to 20 per page
-
+# - doesn't provide consistent results per page (e.g. 200-220, 220-238, 239-259)
