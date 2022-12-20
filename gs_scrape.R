@@ -119,6 +119,15 @@ save_wp <- function(dir=NA, encoding = "UTF-8", url, ip, port, ua){
 
 save_wp(dir = "/Users/laut/Downloads", url = test_url, ip = test_proxy_ip, port = test_proxy_port, ua = test_ua)
 
+################################################################################
+################################################################################
+################################################################################
+# cycle through the url_list until there's a non-200 status-code
+# then cycle to the next proxy ip, port, and new ua keep this switching until the page is obtained
+# then go the next page and repeat the above steps
+################################################################################
+################################################################################
+################################################################################
 
 
 
