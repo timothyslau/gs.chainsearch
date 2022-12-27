@@ -19,22 +19,22 @@ url_list <- function(second_pg_url, from=0, to=900, by=20){
   sapply(
     X = seq(from = from, to = to, by = by), 
     FUN = function(i){gsub(pattern = "start=\\d\\d", replacement = paste0("start=", i), x = second_pg_url)})
-  }
+}
 
 url_list(second_pg_url = "https://scholar.google.com/scholar?start=20&hl=en&as_sdt=5,45&sciodt=0,45&as_yhi=2019&cites=10244671870114417611&scipsc=")
 
 
 # generate list of IP addresses for a proxy
 proxy_list <- function(https=TRUE, google=TRUE) {
-    https_flg <- ifelse(test = https == TRUE, yes = "yes", no = "no")
-    google_flg <- ifelse(test = google == TRUE, yes = "yes", no = "no")
-    url <- "https://free-proxy-list.net"
-    html <- rvest::read_html(x = url)
-    element <- rvest::html_element(x = html, xpath = '//*[@id="list"]/div/div[2]/div/table')
-    table <- rvest::html_table(element)[,c(1,2,4,6,7,8)]
-    colnames(table) <- c("ip", "port", "country", "google", "https", "last_checked")
-    out <- subset(x = table, subset = (google == google_flg) & (https == https_flg))
-    return(out)
+  https_flg <- ifelse(test = https == TRUE, yes = "yes", no = "no")
+  google_flg <- ifelse(test = google == TRUE, yes = "yes", no = "no")
+  url <- "https://free-proxy-list.net"
+  html <- rvest::read_html(x = url)
+  element <- rvest::html_element(x = html, xpath = '//*[@id="list"]/div/div[2]/div/table')
+  table <- rvest::html_table(element)[,c(1,2,4,6,7,8)]
+  colnames(table) <- c("ip", "port", "country", "google", "https", "last_checked")
+  out <- subset(x = table, subset = (google == google_flg) & (https == https_flg))
+  return(out)
 }
 
 proxy_list()
@@ -58,7 +58,7 @@ ua_list()
 unit_test <- function(test="ua", proxy_ip, proxy_port, my_ua){
   if (test == "ua") {
     url <- "http://httpbin.org/user-agent"
-    }
+  }
   else if (test == "ip") {
     url <- "https://httpbin.org/ip"
   }
@@ -105,7 +105,7 @@ save_wp <- function(dir=NA, encoding = "UTF-8", url, ip, port, ua){
     httr::user_agent(agent = ua),
     httr::use_proxy(url = ip, port = port),
     httr::verbose()
-    )
+  )
   
   if (wp$status_code == 200) {
     file_nm <- paste0(unlist(strsplit(x = unlist(strsplit(x = url, split = "cites="))[2], split = "&scipsc=")), "-", as.numeric(unlist(regmatches(x = url, m = regexpr(pattern = "[[:digit:]]+", text = url)))), ".html")
