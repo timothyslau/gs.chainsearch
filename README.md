@@ -22,6 +22,16 @@ The general strategy is as follows:
 5.  Parse publication details from raw html.
 6.  De-duplicate publication details.
 
+## Contributing
+
+To setup the development environment:
+
+1. `git pull` the code (FYI only the `main` branch is being used for now).
+2. Open `gs.chainsearch.Rproj` to open the R project. This will trigger `.Rprofile` which automatically handles some of the development setup.
+3. `renv` is used to manage dependencies. When the R project is loaded, this should install itself and warn you if there are any package conflicts. Do `renv::restore()` to restore the package library.
+4. **IMPORTANT**: Standalone scripts should be saved within the `dev/` directory. This directory is ignored when the package is built and the code there will not be evaluated.
+5. To build the package and run the application, do `golem::run_dev()`.
+
 ## Shiny App
 
 This package includes a shiny interface accessible by running
