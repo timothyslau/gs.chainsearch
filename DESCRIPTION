@@ -7,13 +7,15 @@ Authors@R:
     person("Lance Upton", role = c("aut"), email = "lance.upton@gmail.com")
   )
 Description: A tool for systematic reviewers to scrape google scholar scholar
-  results citing a key publication.
+  results citing a cornerstone publication.
 License: file LICENSE
 Imports: 
     bs4Dash (>= 2.1.0),
     config (>= 0.3.1),
+    data.table (>= 1.14.6),
     DT (>= 0.26),
     fs (>= 1.5.2),
+    gargoyle (>= 0.0.1),
     golem (>= 0.3.5),
     httr (>= 1.4.4),
     renv (>= 0.16.0),
