@@ -35,5 +35,6 @@ dt_minimal <- function(data, colnames) {
     height = NULL,
     elementId = NULL,
     selection = list(mode = "single", target = "row")
-  )
+  ) |>
+    formatRound(columns = which(sapply(data, is.numeric)), digits = 2)
 }

@@ -49,11 +49,11 @@ app_sidebar <- function() {
     bs4SidebarMenu(
       id = "tab",
       bs4SidebarMenuItem(
-        text = "Project Settings",
+        text = "Session Settings",
         icon = icon("folder-tree"),
         # badgeLabel = NULL,
         # badgeColor = "success",
-        tabName = "project"
+        tabName = "session"
       ),
       bs4SidebarMenuItem(
         text = "Proxy Settings",
@@ -61,6 +61,20 @@ app_sidebar <- function() {
         # badgeLabel = NULL,
         # badgeColor = "success",
         tabName = "proxy"
+      ),
+      bs4SidebarMenuItem(
+        text = "Scrape",
+        icon = icon("magnifying-glass"),
+        # badgeLabel = NULL,
+        # badgeColor = "success",
+        tabName = "scrape"
+      ),
+      bs4SidebarMenuItem(
+        text = "Results",
+        icon = icon("table-list"),
+        # badgeLabel = NULL,
+        # badgeColor = "success",
+        tabName = "results"
       )
     )
   )
@@ -71,12 +85,20 @@ app_body <- function() {
   bs4DashBody(
     tabItems(
       tabItem(
-        tabName = "project",
-        mod_project_ui("project")
+        tabName = "session",
+        mod_session_ui("session")
       ),
       tabItem(
         tabName = "proxy",
         mod_proxy_ui("proxy")
+      ),
+      tabItem(
+        tabName = "scrape",
+        mod_scrape_ui("scrape")
+      ),
+      tabItem(
+        tabName = "results",
+        mod_results_ui("results")
       )
     )
   )
@@ -118,6 +140,8 @@ golem_add_external_resources <- function() {
     favicon(),
     bundle_resources(path = app_sys("app/www"), app_title = app_config_get("app_title")),
     useShinyjs(),
-    useWaiter()
+    useWaiter(),
+    # Initialize working session
+    session_init()
   )
 }

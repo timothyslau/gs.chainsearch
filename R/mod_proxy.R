@@ -9,9 +9,13 @@ mod_proxy_ui <- function(id) {
   )
 }
 
+#' @importFrom gargoyle init watch
 mod_proxy_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    
+    # Trigger used to communicate blacklist action
+    init("proxy_blacklist")
     
     mod_proxy_table_server("table")
     mod_proxy_blacklist_server("blacklist")
@@ -45,17 +49,15 @@ mod_proxy_table_ui <- function(id) {
 }
 
 #' @importFrom DT renderDT
+#' @importFrom gargoyle trigger
 mod_proxy_table_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
     # Proxy table
-    rv_proxytab <- reactiveVal(proxytab_read())
+    rv_proxytab <- reactiveVal(proxytab_get())
     output$dt_proxytab <- renderDT(dt_proxytab(rv_proxytab()))
     selected_row <- reactive(input$dt_proxytab_rows_selected)
-    
-    # Proxy blacklist
-    rv_proxybl <- reactiveVal(proxybl_read())
     
     # Toggle UI
     bind_state("btn_blacklist", selected_row)
@@ -65,9 +67,8 @@ mod_proxy_table_server <- function(id) {
       tryCatch(
         expr = {
           popup_loading("Reloading proxy table...")
-          tmp <- proxytab_make()
-          proxytab_write(tmp)
-          rv_proxytab(tmp)
+          refresh_proxy_table()
+          rv_proxytab(proxytab_get())
           popup_success("Proxy table updated!")
         },
         error = popup_error
@@ -82,15 +83,13 @@ mod_proxy_table_server <- function(id) {
           # Selected proxy
           df <- rv_proxytab()
           row <- as.list(df[selected_row(), ])
-          # Add to blacklist
-          tmp1 <- rv_proxybl()
-          tmp1 <- rbind(tmp1, row)
-          proxybl_write(tmp1)
-          rv_proxybl(tmp1)
-          # Remove from table
-          tmp2 <- df[-selected_row(), ]
-          proxytab_write(tmp2)
-          rv_proxytab(tmp2)
+          # Blacklist proxy
+          blacklist_proxy(row$ip, row$port)
+          # Update table
+          tmp <- proxytab_get()
+          rv_proxytab(tmp)
+          # Trigger blacklist
+          trigger("proxy_blacklist")
           popup_success("Proxy blacklisted!")
         },
         error = popup_error
@@ -121,26 +120,39 @@ mod_proxy_blacklist_ui <- function(id) {
 }
 
 #' @importFrom DT renderDT
+#' @importFrom gargoyle on
 mod_proxy_blacklist_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
     # Proxy table
-    rv_proxytab <- reactiveVal(proxybl_read())
-    output$dt_proxytab <- renderDT(dt_proxytab(rv_proxytab()))
+    rv_proxytab <- reactiveVal(proxybl_get())
+    output$dt_proxytab <- renderDT(dt_proxybl(rv_proxytab()))
     selected_row <- reactive(input$dt_proxytab_rows_selected)
+    
+    # Blacklist callback
+    on("proxy_blacklist", rv_proxytab(proxybl_get()))
     
     # Toggle UI
     bind_state("btn_whitelist", selected_row)
     
     # Whitelist proxy
     observeEvent(input$btn_whitelist, {
-      df <- rv_proxytab()
-      row <- df[selected_row(), ]
-      print(as.list(row))
-      
-      browser()
-      
+      tryCatch(
+        expr = {
+          popup_loading("Whitelisting proxy...")
+          # Selected proxy
+          df <- rv_proxytab()
+          row <- as.list(df[selected_row(), ])
+          # Whitelist proxy
+          whitelist_proxy(row$ip, row$port)
+          # Update table
+          tmp <- proxybl_get()
+          rv_proxytab(tmp)
+          popup_success("Proxy whitelisted!")
+        },
+        error = popup_error
+      )
     })
     
   })
