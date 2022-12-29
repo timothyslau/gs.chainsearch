@@ -14,7 +14,7 @@ library(rvest)
 
 
 # generate list of webpages
-url_list <- function(second_pg_url, from=0, to=900, by=20){
+url_list <- function(second_pg_url, from=0, to=900, by=10){
   try(if (!by %in% c(10, 20)) stop("`by` kwarg must be equal to either 10 or 20"))
   sapply(
     X = seq(from = from, to = to, by = by), 
@@ -73,7 +73,6 @@ unit_test <- function(test="ua", proxy_ip, proxy_port, my_ua){
   return(cat(content(x = out, as = "text", encoding = "UTF-8")))
 }
 
-my_ua <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.2 Safari/605.1.15"
 
 unit_test(
   test = "ua",
@@ -92,10 +91,10 @@ unit_test(
 
 # SCRAPE WEBPAGES ---------------------------------------------------------
 
-test_url <- url_list(second_pg_url = "https://scholar.google.com/scholar?start=20&hl=en&as_sdt=5,45&sciodt=0,45&as_yhi=2019&cites=10244671870114417611&scipsc=")[2]
-test_proxy_ip <- proxy_list(https = T, google = T)$ip[2]
-test_proxy_port <- proxy_list(https = T, google = T)$port[2]
-test_ua <- ua_list()$ua[1]
+# test_url <- url_list(second_pg_url = "https://scholar.google.com/scholar?start=20&hl=en&as_sdt=5,45&sciodt=0,45&as_yhi=2019&cites=10244671870114417611&scipsc=")
+# test_url <- url_list(second_pg_url = "https://scholar.google.com/scholar?start=20&hl=en&as_sdt=5,45&sciodt=0,45&as_ylo=2019&cites=10244671870114417611&scipsc=", to = 820)
+# test_ua <- ua_list()$ua[1]
+my_ua <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.2 Safari/605.1.15"
 
 save_wp <- function(dir=NA, encoding = "UTF-8", url, ip, port, ua){
   if (is.na(dir)) {dir <- getwd()}
@@ -104,20 +103,85 @@ save_wp <- function(dir=NA, encoding = "UTF-8", url, ip, port, ua){
     url = url,
     httr::user_agent(agent = ua),
     httr::use_proxy(url = ip, port = port),
-    httr::verbose()
+    httr::verbose(),
+    # query = list(render_js = "1")
+    render_js = "1"
     )
   
   if (wp$status_code == 200) {
     file_nm <- paste0(unlist(strsplit(x = unlist(strsplit(x = url, split = "cites="))[2], split = "&scipsc=")), "-", as.numeric(unlist(regmatches(x = url, m = regexpr(pattern = "[[:digit:]]+", text = url)))), ".html")
-    cat(httr::content(x = wp, as = "text", encoding = encoding), file = paste0(dir, "/", file_nm))  
+    slp <- runif(n = 1, min = 1, max = 3)
+    print(paste("sleep", slp, "- download_success", url))
+    cat(httr::content(x = wp, as = "text", encoding = encoding), file = paste0(dir, "/", file_nm))
+    Sys.sleep(time = slp)
   }
   else {
-    message("Page Load Failure: Build a better function for handling this!")
+    # message("Page Load Failure: Build a better function for handling this!")
+    print(paste("PROXY_FAILURE -", url))
+    break
   }
-  
 }
 
-save_wp(dir = "/Users/laut/Downloads", url = test_url, ip = test_proxy_ip, port = test_proxy_port, ua = test_ua)
+
+# test_proxy_ip
+#   ip              port country     google https last_checked
+#   <chr>          <int> <chr>       <chr>  <chr> <chr>       
+# 1 51.38.28.127      80 Spain       yes    yes   1 min ago   
+# 2 51.159.115.233  3128 France      yes    yes   1 min ago   
+# 3 190.61.88.147   8080 Guatemala   yes    yes   10 mins ago 
+# 4 112.217.162.5   3128 South Korea yes    yes   31 mins ago 
+# 5 113.23.176.254  8118 Malaysia    yes    yes   50 mins ago 
+
+
+test_proxy_ip <- proxy_list(https = T, google = T)$ip[5]
+test_proxy_port <- proxy_list(https = T, google = T)$port[5]
+
+# _ to 2019
+test_url <- url_list(second_pg_url = "https://scholar.google.com/scholar?start=20&hl=en&as_sdt=5,45&sciodt=0,45&as_ylo=2019&cites=10244671870114417611&scipsc=", to = 900, by = 10)
+for (url in test_url) {
+  save_wp(
+    dir = "/Users/laut/Downloads/scrape_results/_-2019", 
+    url = url,
+    ip = test_proxy_ip, 
+    port = test_proxy_port, 
+    ua = my_ua
+  )
+}
+
+
+# 2019 to _
+test_url <- url_list(second_pg_url = "https://scholar.google.com/scholar?start=20&hl=en&as_sdt=5,45&sciodt=0,45&as_ylo=2019&cites=10244671870114417611&scipsc=", to = 820, by = 10)
+for (url in test_url) {
+  save_wp(
+    dir = "/Users/laut/Downloads/scrape_results/2019-_", 
+    url = url, 
+    ip = test_proxy_ip, 
+    port = test_proxy_port, 
+    ua = my_ua
+    )
+}
+
+
+
+
+
+
+
+
+
+
+
+for (url in test_url[22:length(test_url)]) {
+  save_wp(dir = "/Users/laut/Downloads/scrape_results", url = url, ip = test_proxy_ip, port = test_proxy_port, ua = my_ua)
+}
+
+
+
+
+
+
+
+
 
 ################################################################################
 ################################################################################
@@ -136,7 +200,9 @@ save_wp(dir = "/Users/laut/Downloads", url = test_url, ip = test_proxy_ip, port 
 unlist(mapply(FUN = function(x, times){rep(x = x, times = times)}, x = 1:4, times = 4:1, SIMPLIFY = TRUE))
 rep(x = 1:4, times = 4:1)
 
-
+for (i in 1:10) {
+  print(i)
+  }
 
 
 
