@@ -22,66 +22,26 @@ The general strategy is as follows:
     html.
 4.  Process metadata (e.g., remove duplicates).
 
-Contributions are more than welcome. Please see
-[Contributing](#contributing) for guidance.
+Contributions are more than welcome! See
+[CONTRIBUTING](.github/CONTRIBUTING.md) for guidance.
 
-## <a id = "contributing">Contributing</a>
+### Package Data
 
-To setup the development environment:
+By default, this package tracks files within the R user package cache
+(see `tools::R_user_dir`). This can be modified to any mounted directory
+via `storage_update`. Each cornerstone publication is given a dedicated
+subdirectory within that. The structure is as follows:
 
-1.  Fork the repository to your github account and clone your fork into
-    your local filesystem. See <https://happygitwithr.com/> for
-    instructions on how to do this.
-2.  Open `gs.chainsearch.Rproj` to open the R project in RStudio. This
-    is necessary in order to perform automated development environment
-    setup.
-3.  The `renv` package is used to track dependencies. When the R session
-    begins, the package installs itself and restores the package
-    library. If any issues occur, a message will be displayed. *Follow
-    any suggestions these messages make*. For instance, you should
-    expect a message when you open the R project for the first time
-    after cloning, instructing you to do `renv::restore()`. This is
-    because actual package installations aren’t tracked in Github.
-4.  **IMPORTANT**: Standalone scripts should be saved within the `dev/`
-    directory. This directory is ignored when the package is built and
-    the code there will not be evaluated. This is a good place to store
-    demo code.
-5.  To rebuild the package, do `golem::document_and_reload()`. This will
-    load the package and make exported methods available in the current
-    session.
-
-**Packages**
-
-To add a dependency, the following procedure should be followed: 1. Do
-`renv::install(<pkg>)` to install the package. 2. Do
-`usethis::use_package(<pkg>, min_version = TRUE)` to add the package to
-`DESCRIPTION`. 3. Do `renv::snapshot()` to update `renv.lock`, which is
-used for tracking purposes. 4. Include the appropriate `roxygen2` tags
-to import methods to use with the function like so:
-
-``` r
-#' @importFrom httr GET
-foo <- function(url) {
-  GET(url)
-}
-```
-
-## Package Data
-
-Package data is stored in the R user package cache (see
-`tools::R_user_dir`). Each cornerstone publication operates under a
-dedicated subdirectory within that. The structure is as follows:
-
-    ├── .../gs.chainsearch/cache/
-    │  ├── proxy_table.csv
-    │  ├── proxy_blacklist.csv
-    │  ├── <publication_id>
-    │    ├── pages/
-    │      ├── page1.html
-    │      ├── page2.html
-    │      ├── ...
-    │    ├── meta_raw.csv
-    │    ├── meta_final.csv
+    ├── /<storage>/
+      ├── proxy_table.csv
+      ├── proxy_blacklist.csv
+      ├── <publication_id>/
+        ├── pages/
+          ├── page1.html
+          ├── page2.html
+          ├── ...
+        ├── meta_raw.csv
+        ├── meta_final.csv
 
 - `proxy_table.csv`: A table of proxy IPs. The table includes `ip`,
   `port`, and `active` (either TRUE or FALSE, indicating if the proxy is
@@ -96,26 +56,39 @@ dedicated subdirectory within that. The structure is as follows:
 - `meta_raw.csv`: A table of raw metadata extracted from raw HTML pages.
 - `meta_final.csv`: A table of processed metadata.
 
-## Proxy
+### Proxy Cycling
 
-In order to help avoid IP bans when scraping Google Scholar, this
-package leverages the public proxies provided by the API at
-<https://geonode.com/free-proxy-list/>. It ignores any IPs that have not
-passed their internal “google check”.
+A proxy cycling procedure is implemented internally in order to
+gracefully recover from IP bans issued by Google. At the beginning of a
+working session, a fresh list of public proxies is fetched (thanks
+[Geonode](https://geonode.com/free-proxy-list/)!. This list is randomly
+sampled during the scraping process. Each time an IP ban is detected,
+the culprit IP is blacklisted and subsequent scrapes will not consider
+it.
 
-## Shiny App
+### Shiny App
 
 This package includes a shiny interface accessible by running
 `gs.chainsearch::app_run()`.
 
-### Project Settings
+#### Session Settings
 
-Via the `Project Settings` interface, the user is able to select the
-working directory (based on the cornerstone publication), browse project
-progress, and manage project files.
+Via the `Session Settings` interface, the user is able to select the
+storage directory, indicate the cornerstone publication, and manage
+package files.
 
-### Proxy Settings
+#### Proxy Settings
 
-Via the `Proxy Settings` interface, the user is able to browse the
-active proxy list, reload the proxy list with updated entries, and
-blacklist individual proxies.
+Via the `Proxy Settings` interface, the user is able to browse and
+refresh the proxy list, manually set the active proxy, blacklist
+individual proxies, and view proxy logs.
+
+#### Scrape
+
+Via the `Scrape` interface, the user is able to control and monitor the
+active scraping job.
+
+#### Results
+
+Via the `Results` interface, the user is able to view and modify
+publication metadata extracted from the scraped HTML.
