@@ -5,4 +5,5 @@ options(renv.settings = list(
   snapshot.type = "explicit"
 ))
 
+# Restore package library
 source("renv/activate.R")
