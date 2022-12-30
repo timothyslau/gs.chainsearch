@@ -1,11 +1,4 @@
 
-# CONFIG ------------------------------------------------------------------
-
-#' @importFrom httr config
-httr_config <- function() {
-  config()
-}
-
 # FILESYSTEM --------------------------------------------------------------
 
 # Proxy table
@@ -132,34 +125,25 @@ whitelist_proxy <- function(ip, port) {
 # UTILS -------------------------------------------------------------------
 
 # Fetch the proxy table
-#' @importFrom httr content GET modify_url
+#' @importFrom jsonlite fromJSON
 fetch_proxy_table <- function(limit) {
-  # Fetch proxy table
-  url <- proxy_table_url(limit)
-  res <- GET(url)
+  # TODO: Loop through fast, medium, slow until limit is attained
+  url <- proxy_table_url(limit, 1)
+  tmp <- fromJSON(url)
   # Wrangle into data frame
-  tmp <- content(res)
   tmp <- lapply(tmp$data, unlist)
-  tmp <- Reduce(rbind, tmp)
-  # Apply classes
   tmp <- data.frame(tmp)
+  # Apply classes
   tmp$latency <- as.numeric(tmp$latency)
   tmp$upTime <- as.numeric(tmp$upTime)
   return(tmp)
 }
 
-#' @importFrom httr modify_url
-proxy_table_url <- function(limit) {
-  modify_url(
-    url = "https://proxylist.geonode.com/api/proxy-list",
-    query  = list(
-      limit = limit,
-      page = 1,
-      speed = "fast",
-      sort_by = "latency",
-      sort_type = "asc",
-      google = "true"
-    )
+proxy_table_url <- function(limit, page = 1, speed = c("fast", "medium", "slow")) {
+  speed <- match.arg(speed)
+  paste0(
+    "https://proxylist.geonode.com/api/proxy-list?limit=", limit,
+    "&page=", page, "&google=true&speed=", speed
   )
 }
 
@@ -170,7 +154,7 @@ filter_proxy_table <- function(tab) {
   i2 <- which(tab$port %in% blacklist$port)
   omit <- intersect(i1, i2)
   if (length(omit) > 0) {
-    LOG_MSG("Removing ", length(omit), " blacklisted proxies.")
+    LOG_MSG("Omitting ", length(omit), " blacklisted proxies.")
     tab <- tab[-omit, ]
   }
   return(tab)
